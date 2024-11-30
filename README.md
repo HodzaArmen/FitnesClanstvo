@@ -3,8 +3,8 @@
 ## Opis
 Spletna aplikacija za upravljanje članstva in rezervacij v fitnes centru.
 
-Armen Hodža
-Jakob Vuga
+Armen Hodža 63230105
+Jakob Vuga 63230361
 
 ## Zagon
 
