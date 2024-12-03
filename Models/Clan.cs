@@ -7,5 +7,6 @@ namespace FitnesClanstvo.Models
         public required string Priimek { get; set; }
         public DateTime DatumRojstva { get; set; }
         public string? Email { get; set; }
+        public Clanstvo? Clanstvo { get; set; }
     }
 }

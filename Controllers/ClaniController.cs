@@ -21,10 +21,56 @@ namespace FitnesClanstvo.Controllers
         }
 
         // GET: Clani
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+        string sortOrder,
+        string currentFilter,
+        string searchString,
+        int? pageNumber)
+        {
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            var clani = from s in _context.Clani
+                        select s;
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                clani = clani.Where(s => s.Priimek.Contains(searchString)
+                                    || s.Ime.Contains(searchString));
+            }
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    clani = clani.OrderByDescending(s => s.Priimek);
+                    break;
+                case "Date":
+                    clani = clani.OrderBy(s => s.DatumRojstva);
+                    break;
+                case "date_desc":
+                    clani = clani.OrderByDescending(s => s.DatumRojstva);
+                    break;
+                default:
+                    clani = clani.OrderBy(s => s.Priimek);
+                    break;
+            }
+            int pageSize = 3;
+            return View(await PaginatedList<Clan>.CreateAsync(clani.AsNoTracking(), pageNumber ?? 1, pageSize));
+        }
+        /*public async Task<IActionResult> Index()
         {
             return View(await _context.Clani.ToListAsync());
-        }
+        }*/
         [Authorize]
         // GET: Clani/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -33,9 +79,12 @@ namespace FitnesClanstvo.Controllers
             {
                 return NotFound();
             }
-
             var clan = await _context.Clani
+                .Include(c => c.Clanstvo) // Vključi članstvo
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id);
+            //var clan = await _context.Clani
+            //    .FirstOrDefaultAsync(m => m.Id == id);
             if (clan == null)
             {
                 return NotFound();
@@ -55,15 +104,26 @@ namespace FitnesClanstvo.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Ime,Priimek,DatumRojstva,Email")] Clan clan)
+        //[ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Ime,Priimek,DatumRojstva,Email")] Clan clan)
         {
-            if (ModelState.IsValid)
+            try
             {
-                _context.Add(clan);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                if (ModelState.IsValid)
+                {
+                    _context.Add(clan);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
             }
+            catch (DbUpdateException /* ex */)
+            {
+                //Log the error (uncomment ex variable name and write a log.
+                ModelState.AddModelError("", "Unable to save changes. " +
+                    "Try again, and if the problem persists " +
+                    "see your system administrator.");
+            }
+            
             return View(clan);
         }
 
