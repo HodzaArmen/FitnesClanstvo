@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FitnesClanstvo.Data;
 using FitnesClanstvo.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FitnesClanstvo.Controllers
 {
@@ -24,7 +25,7 @@ namespace FitnesClanstvo.Controllers
         {
             return View(await _context.Clani.ToListAsync());
         }
-
+        [Authorize]
         // GET: Clani/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -44,6 +45,7 @@ namespace FitnesClanstvo.Controllers
         }
 
         // GET: Clani/Create
+        [Authorize]
         public IActionResult Create()
         {
             return View();

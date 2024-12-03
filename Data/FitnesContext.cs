@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using FitnesClanstvo.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace FitnesClanstvo.Data;
-public class FitnesContext : DbContext
+public class FitnesContext : IdentityDbContext<ApplicationUser>
 {
     public FitnesContext(DbContextOptions<FitnesContext> options) : base(options) { }
 
@@ -15,10 +16,12 @@ public class FitnesContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Placilo>()
-            .Property(p => p.Znesek)
-            .HasPrecision(18, 2);
-
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Clan>().ToTable("Clan");
+        modelBuilder.Entity<Clanstvo>().ToTable("Clanstvo");
+        modelBuilder.Entity<Vadba>().ToTable("Vadba");
+        modelBuilder.Entity<Rezervacija>().ToTable("Rezervacija");
+        modelBuilder.Entity<Prisotnost>().ToTable("Prisotnost");
+        modelBuilder.Entity<Placilo>().ToTable("Placilo");
     }
 }

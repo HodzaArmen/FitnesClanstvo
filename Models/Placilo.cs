@@ -9,9 +9,11 @@ namespace FitnesClanstvo.Models
     {
         public int Id { get; set; }
         public DateTime DatumPlacila { get; set; }
-        [Column(TypeName = "decimal(18, 2)")]
         public decimal Znesek { get; set; }
         public int ClanstvoId { get; set; }
+        public DateTime? DateCreated { get; set; }
+        public DateTime? DateEdited { get; set; }
+        public ApplicationUser? Owner { get; set; }
         public Clanstvo? Clanstvo { get; set; }
     }
 }

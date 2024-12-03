@@ -7,16 +7,21 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FitnesClanstvo.Data;
 using FitnesClanstvo.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace FitnesClanstvo.Controllers
 {
+    [Authorize(Roles = "Administrator, Manager")]
     public class PlacilaController : Controller
     {
         private readonly FitnesContext _context;
+        private readonly UserManager<ApplicationUser> _usermanager;
 
-        public PlacilaController(FitnesContext context)
+        public PlacilaController(FitnesContext context, UserManager<ApplicationUser> usermanager)
         {
             _context = context;
+            _usermanager = usermanager;
         }
 
         // GET: Placila
@@ -59,8 +64,13 @@ namespace FitnesClanstvo.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,DatumPlacila,Znesek,ClanstvoId")] Placilo placilo)
         {
+            var currentUser = await _usermanager.GetUserAsync(User);
             if (ModelState.IsValid)
             {
+                placilo.DateCreated = DateTime.Now;
+                placilo.DateEdited = DateTime.Now;
+                placilo.Owner = currentUser;
+
                 _context.Add(placilo);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
