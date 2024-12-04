@@ -18,3 +18,6 @@ Jakob Vuga 63230361
   git add .
   git commit -m "Opis sprememb"
   git push
+
+4. **zagon MS SQL Server docker containerja, Windows**
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=yourStrong(!)Password" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-CU15-GDR1-ubuntu-22.04
