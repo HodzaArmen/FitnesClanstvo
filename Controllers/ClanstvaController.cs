@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FitnesClanstvo.Data;
 using FitnesClanstvo.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FitnesClanstvo.Controllers
 {
@@ -20,11 +21,56 @@ namespace FitnesClanstvo.Controllers
         }
 
         // GET: Clanstva
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+        string sortOrder,
+        string currentFilter,
+        string searchString,
+        int? pageNumber)
+        {
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["TipSortParm"] = String.IsNullOrEmpty(sortOrder) ? "tip_desc" : "";
+            ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            var clanstva = from s in _context.Clanstva
+                        select s;
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                clanstva = clanstva.Where(s => s.Tip.Contains(searchString));
+            }
+            switch (sortOrder)
+            {
+                case "tip_desc":
+                    clanstva = clanstva.OrderByDescending(s => s.Tip);
+                    break;
+                case "Date":
+                    clanstva = clanstva.OrderBy(s => s.Zacetek);
+                    break;
+                case "date_desc":
+                    clanstva = clanstva.OrderByDescending(s => s.Zacetek);
+                    break;
+                default:
+                    clanstva = clanstva.OrderBy(s => s.Tip);
+                    break;
+            }
+            int pageSize = 3;
+            return View(await PaginatedList<Clanstvo>.CreateAsync(clanstva.AsNoTracking(), pageNumber ?? 1, pageSize));
+        }
+        /*public async Task<IActionResult> Index()
         {
             var fitnesContext = _context.Clanstva.Include(c => c.Clan);
             return View(await fitnesContext.ToListAsync());
-        }
+        }*/
 
         // GET: Clanstva/Details/5
         public async Task<IActionResult> Details(int? id)

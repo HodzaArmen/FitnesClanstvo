@@ -20,11 +20,52 @@ namespace FitnesClanstvo.Controllers
         }
 
         // GET: Rezervacije
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+        string sortOrder,
+        string currentFilter,
+        string searchString,
+        int? pageNumber)
+        {
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            var rezervacije = from s in _context.Rezervacije
+                        select s;
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                rezervacije = rezervacije.Where(p =>
+                    p.DatumRezervacije.Year.ToString().Contains(searchString) || 
+                    p.DatumRezervacije.Month.ToString().Contains(searchString) || 
+                    p.DatumRezervacije.Day.ToString().Contains(searchString));
+            }
+            switch (sortOrder)
+            {
+                case "Date":
+                    rezervacije = rezervacije.OrderBy(s => s.DatumRezervacije);
+                    break;
+                default:
+                    rezervacije = rezervacije.OrderByDescending(s => s.DatumRezervacije);
+                    break;
+            }
+            int pageSize = 3;
+            return View(await PaginatedList<Rezervacija>.CreateAsync(rezervacije.AsNoTracking(), pageNumber ?? 1, pageSize));
+        }
+        /*public async Task<IActionResult> Index()
         {
             var fitnesContext = _context.Rezervacije.Include(r => r.Clan).Include(r => r.Vadba);
             return View(await fitnesContext.ToListAsync());
-        }
+        }*/
 
         // GET: Rezervacije/Details/5
         public async Task<IActionResult> Details(int? id)

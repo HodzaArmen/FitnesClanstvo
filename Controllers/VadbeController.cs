@@ -20,10 +20,63 @@ namespace FitnesClanstvo.Controllers
         }
 
         // GET: Vadbe
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+        string sortOrder,
+        string currentFilter,
+        string searchString,
+        int? pageNumber)
+        {
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["KapacitetaSortParm"] = sortOrder == "Kapaciteta" ? "kapaciteta_desc" : "Kapaciteta";
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            var vadbe = from s in _context.Vadbe
+                        select s;
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                if (int.TryParse(searchString, out int searchKapaciteta))
+                {
+                    vadbe = vadbe.Where(s => s.Kapaciteta == searchKapaciteta);
+                }
+                else
+                {
+                    vadbe = vadbe.Where(s => s.Ime.Contains(searchString));
+                }
+            }
+
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    vadbe = vadbe.OrderByDescending(s => s.Ime);
+                    break;
+                case "Kapaciteta":
+                    vadbe = vadbe.OrderBy(s => s.Kapaciteta);
+                    break;
+                case "kapaciteta_desc":
+                    vadbe = vadbe.OrderByDescending(s => s.Kapaciteta);
+                    break;
+                default:
+                    vadbe = vadbe.OrderBy(s => s.Ime);
+                    break;
+            }
+            int pageSize = 3;
+            return View(await PaginatedList<Vadba>.CreateAsync(vadbe.AsNoTracking(), pageNumber ?? 1, pageSize));
+        }
+        /*public async Task<IActionResult> Index()
         {
             return View(await _context.Vadbe.ToListAsync());
-        }
+        }*/
 
         // GET: Vadbe/Details/5
         public async Task<IActionResult> Details(int? id)

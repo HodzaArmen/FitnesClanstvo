@@ -25,11 +25,61 @@ namespace FitnesClanstvo.Controllers
         }
 
         // GET: Placila
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+        string sortOrder,
+        string currentFilter,
+        string searchString,
+        int? pageNumber)
+        {
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["ZnesekSortParm"] = String.IsNullOrEmpty(sortOrder) ? "znesek_desc" : "";
+            ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            var placila = from s in _context.Placila
+                        select s;
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                placila = placila.Where(p =>
+                    p.DatumPlacila.Year.ToString().Contains(searchString) || 
+                    p.DatumPlacila.Month.ToString().Contains(searchString) || 
+                    p.DatumPlacila.Day.ToString().Contains(searchString) ||   
+                    p.Znesek.ToString().Contains(searchString));              
+            }
+
+            switch (sortOrder)
+            {
+                case "znesek_desc":
+                    placila = placila.OrderByDescending(s => s.Znesek);
+                    break;
+                case "Date":
+                    placila = placila.OrderBy(s => s.DatumPlacila);
+                    break;
+                case "date_desc":
+                    placila = placila.OrderByDescending(s => s.DatumPlacila);
+                    break;
+                default:
+                    placila = placila.OrderBy(s => s.Znesek);
+                    break;
+            }
+            int pageSize = 3;
+            return View(await PaginatedList<Placilo>.CreateAsync(placila.AsNoTracking(), pageNumber ?? 1, pageSize));
+        }
+        /*public async Task<IActionResult> Index()
         {
             var fitnesContext = _context.Placila.Include(p => p.Clanstvo);
             return View(await fitnesContext.ToListAsync());
-        }
+        }*/
 
         // GET: Placila/Details/5
         public async Task<IActionResult> Details(int? id)
