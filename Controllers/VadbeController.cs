@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FitnesClanstvo.Data;
 using FitnesClanstvo.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FitnesClanstvo.Controllers
 {
@@ -201,6 +202,60 @@ namespace FitnesClanstvo.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator, Manager")]
+        public async Task<IActionResult> PrijaviClanaNaVadbo(int clanId, int vadbaId)
+        {
+            // Poiščite člana
+            var clan = await _context.Clani.FindAsync(clanId);
+            if (clan == null)
+            {
+                return NotFound("Član ni bil najden.");
+            }
+
+            // Poiščite vadbo
+            var vadba = await _context.Vadbe.FindAsync(vadbaId);
+            if (vadba == null)
+            {
+                return NotFound("Vadba ni bila najdena.");
+            }
+
+            // Preverite kapaciteto
+            if (vadba.Kapaciteta <= 0)
+            {
+                return BadRequest("Vadba je polna.");
+            }
+
+            // Preverite, če je član že prijavljen na vadbo
+            var prijavaObstaja = await _context.Prisotnosti
+                .AnyAsync(p => p.ClanId == clanId && p.VadbaId == vadbaId);
+            if (prijavaObstaja)
+            {
+                return BadRequest("Član je že prijavljen na to vadbo.");
+            }
+
+            // Zmanjšajte kapaciteto
+            vadba.Kapaciteta--;
+
+            // Dodajte novo prisotnost
+            var prisotnost = new Prisotnost
+            {
+                ClanId = clan.Id,
+                VadbaId = vadba.Id,
+                DatumPrisotnosti = DateTime.Now
+            };
+
+            _context.Prisotnosti.Add(prisotnost);
+
+            // Shranite spremembe v bazo
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+
 
         private bool VadbaExists(int id)
         {

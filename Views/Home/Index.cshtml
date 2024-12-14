@@ -1,7 +1,36 @@
-﻿@{
+﻿@model FitnesClanstvo.ViewModels.HomeIndexViewModel
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
 <div class="text-center">
     <h1 class="display-4">Fitnes Članstvo</h1>
 </div>
+
+
+<h2>Seznam razpoložljivih vadb</h2>
+
+<form asp-action="Rezerviraj" method="post">
+    <div class="form-group">
+        <label for="vadbaId">Izberite vadbo:</label>
+        <select name="vadbaId" id="vadbaId" class="form-select">
+            <option value="">Izberite vadbo</option>
+            @foreach (var vadba in Model.Vadbe)
+            {
+                <option value="@vadba.Id">@vadba.Ime (@vadba.DatumInUra.ToString("dd.MM.yyyy HH:mm"))</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="izbraniClanId">Izberite člana:</label>
+        <select name="izbraniClanId" id="izbraniClanId" class="form-select">
+            <option value="">Izberite člana</option>
+            @foreach (var clan in ViewBag.Clani as List<FitnesClanstvo.Models.Clan>)
+            {
+                <option value="@clan.Id">@clan.Ime @clan.Priimek</option>
+            }
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Rezerviraj</button>
+</form>

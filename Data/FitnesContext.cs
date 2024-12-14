@@ -22,6 +22,6 @@ public class FitnesContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<Vadba>().ToTable("Vadba");
         modelBuilder.Entity<Rezervacija>().ToTable("Rezervacija");
         modelBuilder.Entity<Prisotnost>().ToTable("Prisotnost");
-        modelBuilder.Entity<Placilo>().ToTable("Placilo");
+        modelBuilder.Entity<Placilo>().ToTable("Placilo");        
     }
 }
