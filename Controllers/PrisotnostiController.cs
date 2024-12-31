@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FitnesClanstvo.Data;
 using FitnesClanstvo.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FitnesClanstvo.Controllers
 {
+    [Authorize(Roles = "Administrator, Manager")]
     public class PrisotnostiController : Controller
     {
         private readonly FitnesContext _context;

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FitnesClanstvo.Migrations
 {
     [DbContext(typeof(FitnesContext))]
-    [Migration("20241231120518_sprememba")]
+    [Migration("20241231131350_sprememba")]
     partial class sprememba
     {
         /// <inheritdoc />

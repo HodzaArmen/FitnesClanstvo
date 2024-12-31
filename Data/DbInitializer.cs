@@ -8,7 +8,7 @@ namespace FitnesClanstvo.Data
 {
     public static class DbInitializer
     {
-        public static async Task Initialize(FitnesContext context)
+        public static async Task Initialize(FitnesContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             context.Database.EnsureCreated();
 
@@ -33,7 +33,6 @@ namespace FitnesClanstvo.Data
             };
             context.Clani.AddRange(clani);
             context.SaveChanges();
-
             // Add activities
             var vadbe = new Vadba[]
             {
@@ -93,55 +92,125 @@ namespace FitnesClanstvo.Data
             context.Prisotnosti.AddRange(prisotnosti);
             context.SaveChanges();
 
+            // // Add roles
+            // var roles = new IdentityRole[]
+            // {
+            //     new IdentityRole{Name="Administrator"},
+            //     new IdentityRole{Name="Manager"},
+            //     new IdentityRole{Name="User"}
+            // };
+            // context.Roles.AddRange(roles);
+            // context.SaveChanges();
+
+            // // Add users
+            // var users = clani.Select(clan => new ApplicationUser
+            // {
+            //     FirstName = clan.Ime,
+            //     LastName = clan.Priimek,
+            //     Email = clan.Email,
+            //     UserName = clan.Email,
+            //     EmailConfirmed = true
+            // }).ToList();
+
+            // users.Insert(0, new ApplicationUser{FirstName="Admin", LastName="User", Email="admin@example.com", UserName="admin@example.com", NormalizedEmail = "ADMIN@EXAMPLE.COM", NormalizedUserName = "ADMIN@EXAMPLE.COM", EmailConfirmed=true});
+            // users.Insert(1, new ApplicationUser{FirstName="Manager1", LastName="User", Email="manager1@example.com", UserName="manager1@example.com", NormalizedEmail = "MANAGAR1@EXAMPLE.COM", NormalizedUserName = "MANAGAR1@EXAMPLE.COM", EmailConfirmed=true});
+            // users.Insert(2, new ApplicationUser{FirstName="Manager2", LastName="User", Email="manager2@example.com", UserName="manager2@example.com", NormalizedEmail = "MANAGAR2@EXAMPLE.COM", NormalizedUserName = "MANAGAR2@EXAMPLE.COM", EmailConfirmed=true});
+
+            // var passwordHasher = new PasswordHasher<ApplicationUser>();
+            // foreach (var user in users)
+            // {
+            //     user.PasswordHash = passwordHasher.HashPassword(user, "Password1!");
+            //     context.Users.Add(user);
+            // }
+            // context.SaveChanges();
+
+            // // Assign roles
+            // var userRoles = new List<IdentityUserRole<string>>
+            // {
+            //     new IdentityUserRole<string> { RoleId = roles[0].Id, UserId = users[0].Id }, // Admin
+            //     new IdentityUserRole<string> { RoleId = roles[1].Id, UserId = users[1].Id }, // Manager 1
+            //     new IdentityUserRole<string> { RoleId = roles[1].Id, UserId = users[2].Id }  // Manager 2
+            // };
+
+            // userRoles.AddRange(users.Skip(3).Select(user => new IdentityUserRole<string>
+            // {
+            //     RoleId = roles[2].Id,
+            //     UserId = user.Id
+            // }));
+
+            // context.UserRoles.AddRange(userRoles);
+            // context.SaveChanges();
+            // foreach (var clan in clani)
+            // {
+            //     var user = new ApplicationUser
+            //     {
+            //         FirstName = clan.Ime,
+            //         LastName = clan.Priimek,
+            //         Email = clan.Email,
+            //         UserName = clan.Email,
+            //         EmailConfirmed = true
+            //     };
+
+            //     var result = await userManager.CreateAsync(user, "Password1!");
+
+            //     if (result.Succeeded)
+            //     {
+            //         await userManager.AddToRoleAsync(user, "User");
+            //     }
+            // }
             // Add roles
-            var roles = new IdentityRole[]
+            string[] roleNames = { "Administrator", "Manager", "User" };
+            foreach (var roleName in roleNames)
             {
-                new IdentityRole{Name="Administrator"},
-                new IdentityRole{Name="Manager"},
-                new IdentityRole{Name="User"}
-            };
-            context.Roles.AddRange(roles);
-            context.SaveChanges();
-
-            // Add users
-            var users = clani.Select(clan => new ApplicationUser
-            {
-                FirstName = clan.Ime,
-                LastName = clan.Priimek,
-                Email = clan.Email,
-                UserName = clan.Email,
-                EmailConfirmed = true
-            }).ToList();
-
-            users.Insert(0, new ApplicationUser{FirstName="Admin", LastName="User", Email="admin@example.com", UserName="admin@example.com", NormalizedEmail = "ADMIN@EXAMPLE.COM", NormalizedUserName = "ADMIN@EXAMPLE.COM", EmailConfirmed=true});
-            users.Insert(1, new ApplicationUser{FirstName="Manager1", LastName="User", Email="manager1@example.com", UserName="manager1@example.com", NormalizedEmail = "MANAGAR1@EXAMPLE.COM", NormalizedUserName = "MANAGAR1@EXAMPLE.COM", EmailConfirmed=true});
-            users.Insert(2, new ApplicationUser{FirstName="Manager2", LastName="User", Email="manager2@example.com", UserName="manager2@example.com", NormalizedEmail = "MANAGAR2@EXAMPLE.COM", NormalizedUserName = "MANAGAR2@EXAMPLE.COM", EmailConfirmed=true});
-
-            var passwordHasher = new PasswordHasher<ApplicationUser>();
-            foreach (var user in users)
-            {
-                user.PasswordHash = passwordHasher.HashPassword(user, "Password1!");
-                context.Users.Add(user);
+                if (!await roleManager.RoleExistsAsync(roleName))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(roleName));
+                }
             }
-            context.SaveChanges();
 
-            // Assign roles
-            var userRoles = new List<IdentityUserRole<string>>
+            // Add users and assign roles
+            var defaultPassword = "Password1!";
+            foreach (var clan in clani)
             {
-                new IdentityUserRole<string> { RoleId = roles[0].Id, UserId = users[0].Id }, // Admin
-                new IdentityUserRole<string> { RoleId = roles[1].Id, UserId = users[1].Id }, // Manager 1
-                new IdentityUserRole<string> { RoleId = roles[1].Id, UserId = users[2].Id }  // Manager 2
+                var user = new ApplicationUser
+                {
+                    FirstName = clan.Ime,
+                    LastName = clan.Priimek,
+                    Email = clan.Email,
+                    UserName = clan.Email,
+                    EmailConfirmed = true
+                };
+
+                var userExists = await userManager.FindByEmailAsync(user.Email);
+                if (userExists == null)
+                {
+                    var result = await userManager.CreateAsync(user, defaultPassword);
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(user, "User");
+                    }
+                }
+            }
+
+            // Add an admin user
+            var adminUser = new ApplicationUser
+            {
+                FirstName = "Admin",
+                LastName = "User",
+                Email = "admin@example.com",
+                UserName = "admin@example.com",
+                EmailConfirmed = true
             };
 
-            userRoles.AddRange(users.Skip(3).Select(user => new IdentityUserRole<string>
+            var adminExists = await userManager.FindByEmailAsync(adminUser.Email);
+            if (adminExists == null)
             {
-                RoleId = roles[2].Id,
-                UserId = user.Id
-            }));
-
-            context.UserRoles.AddRange(userRoles);
-            context.SaveChanges();
-
+                var result = await userManager.CreateAsync(adminUser, defaultPassword);
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(adminUser, "Administrator");
+                }
+            }
         }
     }
 }

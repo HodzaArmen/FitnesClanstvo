@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace FitnesClanstvo.Controllers
 {
+    [Authorize(Roles = "Administrator, Manager")]
     public class VadbeController : Controller
     {
         private readonly FitnesContext _context;
