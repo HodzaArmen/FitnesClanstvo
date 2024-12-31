@@ -42,8 +42,9 @@ namespace FitnesClanstvo.Controllers
 
             ViewData["CurrentFilter"] = searchString;
 
-            var clanstva = from s in _context.Clanstva
-                        select s;
+            var clanstva = _context.Clanstva
+                .Include(c => c.Clan)
+                .AsQueryable();
             if (!String.IsNullOrEmpty(searchString))
             {
                 clanstva = clanstva.Where(s => s.Tip.Contains(searchString));
@@ -63,14 +64,9 @@ namespace FitnesClanstvo.Controllers
                     clanstva = clanstva.OrderBy(s => s.Tip);
                     break;
             }
-            int pageSize = 3;
+            int pageSize = 5;
             return View(await PaginatedList<Clanstvo>.CreateAsync(clanstva.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
-        /*public async Task<IActionResult> Index()
-        {
-            var fitnesContext = _context.Clanstva.Include(c => c.Clan);
-            return View(await fitnesContext.ToListAsync());
-        }*/
 
         // GET: Clanstva/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -94,7 +90,11 @@ namespace FitnesClanstvo.Controllers
         // GET: Clanstva/Create
         public IActionResult Create()
         {
-            ViewData["ClanId"] = new SelectList(_context.Clani, "Id", "Id");
+            ViewBag.ClanId = new SelectList(_context.Clani.Select(c => new 
+            {
+                Id = c.Id,
+                FullName = c.Ime + " " + c.Priimek
+            }), "Id", "FullName");
             return View();
         }
 
@@ -103,15 +103,22 @@ namespace FitnesClanstvo.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Tip,Zacetek,Konec,ClanId")] Clanstvo clanstvo)
+        public IActionResult Create(Clanstvo clanstvo)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(clanstvo);
-                await _context.SaveChangesAsync();
+                _context.SaveChanges();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ClanId"] = new SelectList(_context.Clani, "Id", "Id", clanstvo.ClanId);
+
+            // Ponovno napolni ViewBag v primeru napake
+            ViewBag.ClanId = new SelectList(_context.Clani.Select(c => new 
+            {
+                Id = c.Id,
+                FullName = c.Ime + " " + c.Priimek
+            }), "Id", "FullName");
+
             return View(clanstvo);
         }
 

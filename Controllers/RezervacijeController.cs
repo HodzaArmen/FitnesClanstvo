@@ -40,8 +40,10 @@ namespace FitnesClanstvo.Controllers
 
             ViewData["CurrentFilter"] = searchString;
 
-            var rezervacije = from s in _context.Rezervacije
-                        select s;
+            var rezervacije = _context.Rezervacije
+                .Include(r => r.Clan)
+                .Include(r => r.Vadba)
+                .AsQueryable();
             if (!String.IsNullOrEmpty(searchString))
             {
                 rezervacije = rezervacije.Where(p =>
@@ -58,14 +60,9 @@ namespace FitnesClanstvo.Controllers
                     rezervacije = rezervacije.OrderByDescending(s => s.DatumRezervacije);
                     break;
             }
-            int pageSize = 3;
+            int pageSize = 5;
             return View(await PaginatedList<Rezervacija>.CreateAsync(rezervacije.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
-        /*public async Task<IActionResult> Index()
-        {
-            var fitnesContext = _context.Rezervacije.Include(r => r.Clan).Include(r => r.Vadba);
-            return View(await fitnesContext.ToListAsync());
-        }*/
 
         // GET: Rezervacije/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -90,8 +87,16 @@ namespace FitnesClanstvo.Controllers
         // GET: Rezervacije/Create
         public IActionResult Create()
         {
-            ViewData["ClanId"] = new SelectList(_context.Clani, "Id", "Id");
-            ViewData["VadbaId"] = new SelectList(_context.Vadbe, "Id", "Id");
+            ViewBag.ClanId = new SelectList(_context.Clani.Select(c => new 
+            {
+                Id = c.Id,
+                FullName = c.Ime + " " + c.Priimek
+            }), "Id", "FullName");
+            ViewBag.VadbaId = new SelectList(_context.Vadbe.Select(v => new
+            {
+                Id = v.Id,
+                Ime = v.Ime
+            }), "Id", "Ime");
             return View();
         }
 
@@ -108,8 +113,16 @@ namespace FitnesClanstvo.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ClanId"] = new SelectList(_context.Clani, "Id", "Id", rezervacija.ClanId);
-            ViewData["VadbaId"] = new SelectList(_context.Vadbe, "Id", "Id", rezervacija.VadbaId);
+            ViewBag.ClanId = new SelectList(_context.Clani.Select(c => new 
+            {
+                Id = c.Id,
+                FullName = c.Ime + " " + c.Priimek
+            }), "Id", "FullName");
+            ViewBag.VadbaId = new SelectList(_context.Vadbe.Select(v => new
+            {
+                Id = v.Id,
+                Ime = v.Ime
+            }), "Id", "Ime");
             return View(rezervacija);
         }
 
@@ -126,8 +139,16 @@ namespace FitnesClanstvo.Controllers
             {
                 return NotFound();
             }
-            ViewData["ClanId"] = new SelectList(_context.Clani, "Id", "Id", rezervacija.ClanId);
-            ViewData["VadbaId"] = new SelectList(_context.Vadbe, "Id", "Id", rezervacija.VadbaId);
+            ViewBag.ClanId = new SelectList(_context.Clani.Select(c => new 
+            {
+                Id = c.Id,
+                FullName = c.Ime + " " + c.Priimek
+            }), "Id", "FullName");
+            ViewBag.VadbaId = new SelectList(_context.Vadbe.Select(v => new
+            {
+                Id = v.Id,
+                Ime = v.Ime
+            }), "Id", "Ime");
             return View(rezervacija);
         }
 
@@ -163,8 +184,16 @@ namespace FitnesClanstvo.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ClanId"] = new SelectList(_context.Clani, "Id", "Id", rezervacija.ClanId);
-            ViewData["VadbaId"] = new SelectList(_context.Vadbe, "Id", "Id", rezervacija.VadbaId);
+            ViewBag.ClanId = new SelectList(_context.Clani.Select(c => new 
+            {
+                Id = c.Id,
+                FullName = c.Ime + " " + c.Priimek
+            }), "Id", "FullName");
+            ViewBag.VadbaId = new SelectList(_context.Vadbe.Select(v => new
+            {
+                Id = v.Id,
+                Ime = v.Ime
+            }), "Id", "Ime");
             return View(rezervacija);
         }
 

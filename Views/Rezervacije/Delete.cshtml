@@ -17,17 +17,17 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.DatumRezervacije)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Clan)
+        <dt class="col-sm-2">
+            @Html.DisplayName("Član")
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Clan.Id)
+        <dd class="col-sm-10">
+            @Model.Clan.Ime @Model.Clan.Priimek
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Vadba)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Vadba.Id)
+            @Html.DisplayFor(model => model.Vadba.Ime)
         </dd>
     </dl>
     

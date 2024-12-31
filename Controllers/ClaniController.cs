@@ -64,7 +64,7 @@ namespace FitnesClanstvo.Controllers
                     clani = clani.OrderBy(s => s.Priimek);
                     break;
             }
-            int pageSize = 3;
+            int pageSize = 5;
             return View(await PaginatedList<Clan>.CreateAsync(clani.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
         /*public async Task<IActionResult> Index()

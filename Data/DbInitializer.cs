@@ -11,110 +11,137 @@ namespace FitnesClanstvo.Data
         public static async Task Initialize(FitnesContext context)
         {
             context.Database.EnsureCreated();
-            // Preveri, ali so člani že dodani.
+
             if (context.Clani.Any())
             {
-                return;   // DB je že inicializiran
+                return; // DB is already initialized
             }
 
+            // Add members
             var clani = new Clan[]
             {
                 new Clan{Ime="Janez", Priimek="Novak", DatumRojstva=DateTime.Parse("1990-01-01"), Email="janez.novak@example.com"},
                 new Clan{Ime="Maja", Priimek="Kovač", DatumRojstva=DateTime.Parse("1985-05-15"), Email="maja.kovac@example.com"},
-                new Clan{Ime="Peter", Priimek="Horvat", DatumRojstva=DateTime.Parse("1992-03-20"), Email="peter.horvat@example.com"}
+                new Clan{Ime="Peter", Priimek="Horvat", DatumRojstva=DateTime.Parse("1992-03-20"), Email="peter.horvat@example.com"},
+                new Clan{Ime="Anja", Priimek="Vidmar", DatumRojstva=DateTime.Parse("1994-02-10"), Email="anja.vidmar@example.com"},
+                new Clan{Ime="Luka", Priimek="Breznik", DatumRojstva=DateTime.Parse("1988-07-07"), Email="luka.breznik@example.com"},
+                new Clan{Ime="Eva", Priimek="Zupan", DatumRojstva=DateTime.Parse("1991-12-12"), Email="eva.zupan@example.com"},
+                new Clan{Ime="Tina", Priimek="Oman", DatumRojstva=DateTime.Parse("1987-03-03"), Email="tina.oman@example.com"},
+                new Clan{Ime="Marko", Priimek="Hrovat", DatumRojstva=DateTime.Parse("1993-11-22"), Email="marko.hrovat@example.com"},
+                new Clan{Ime="Nina", Priimek="Potočnik", DatumRojstva=DateTime.Parse("1990-08-18"), Email="nina.potocnik@example.com"},
+                new Clan{Ime="Matej", Priimek="Gradišnik", DatumRojstva=DateTime.Parse("1986-06-06"), Email="matej.gradisnik@example.com"}
             };
             context.Clani.AddRange(clani);
             context.SaveChanges();
 
+            // Add activities
             var vadbe = new Vadba[]
             {
                 new Vadba{Ime="Joga", DatumInUra=DateTime.Now.AddHours(1), Kapaciteta=20},
-                new Vadba{Ime="Zumba", DatumInUra=DateTime.Now.AddHours(2), Kapaciteta=15}
+                new Vadba{Ime="Zumba", DatumInUra=DateTime.Now.AddHours(2), Kapaciteta=15},
+                new Vadba{Ime="Pilates", DatumInUra=DateTime.Now.AddHours(3), Kapaciteta=10},
+                new Vadba{Ime="Kardio", DatumInUra=DateTime.Now.AddHours(4), Kapaciteta=25},
+                new Vadba{Ime="BodyPump", DatumInUra=DateTime.Now.AddHours(5), Kapaciteta=18},
+                new Vadba{Ime="HIIT", DatumInUra=DateTime.Now.AddHours(6), Kapaciteta=12},
+                new Vadba{Ime="Spinning", DatumInUra=DateTime.Now.AddHours(7), Kapaciteta=16},
+                new Vadba{Ime="CrossFit", DatumInUra=DateTime.Now.AddHours(8), Kapaciteta=14},
+                new Vadba{Ime="Aerobika", DatumInUra=DateTime.Now.AddHours(9), Kapaciteta=20},
+                new Vadba{Ime="Bootcamp", DatumInUra=DateTime.Now.AddHours(10), Kapaciteta=15}
             };
             context.Vadbe.AddRange(vadbe);
             context.SaveChanges();
 
-            var clanstva = new Clanstvo[]
+            // Add memberships
+            var clanstva = clani.Select((clan, index) => new Clanstvo
             {
-                new Clanstvo{Tip="Osnovno", Cena=30.00m, Zacetek=DateTime.Now, Konec=DateTime.Now.AddMonths(1), ClanId=1},
-                new Clanstvo{Tip="Premium", Cena=50.00m, Zacetek=DateTime.Now, Konec=DateTime.Now.AddMonths(1), ClanId=2},
-                new Clanstvo{Tip="VIP", Cena=70.00m, Zacetek=DateTime.Now, Konec=DateTime.Now.AddMonths(1), ClanId=3}
-            };
+                Tip = index % 3 == 0 ? "Osnovno" : index % 3 == 1 ? "Premium" : "VIP",
+                Cena = index % 3 == 0 ? 30.00m : index % 3 == 1 ? 50.00m : 70.00m,
+                Zacetek = DateTime.Now,
+                Konec = DateTime.Now.AddMonths(1),
+                ClanId = clan.Id
+            }).ToArray();
             context.Clanstva.AddRange(clanstva);
             context.SaveChanges();
 
-            var rezervacije = new Rezervacija[]
+            // Add reservations
+            var rezervacije = clani.Select((clan, index) => new Rezervacija
             {
-                new Rezervacija{DatumRezervacije=DateTime.Now, ClanId=1, VadbaId=1},
-                new Rezervacija{DatumRezervacije=DateTime.Now, ClanId=2, VadbaId=2},
-                new Rezervacija{DatumRezervacije=DateTime.Now, ClanId=3, VadbaId=1}
-            };
+                DatumRezervacije = DateTime.Now,
+                ClanId = clan.Id,
+                VadbaId = vadbe[index % vadbe.Length].Id
+            }).ToArray();
             context.Rezervacije.AddRange(rezervacije);
             context.SaveChanges();
 
-            var placila = new Placilo[]
+            // Add payments
+            var placila = clanstva.Select(clanstvo => new Placilo
             {
-                new Placilo{DatumPlacila=DateTime.Now, Znesek=30.00m, ClanstvoId=1},
-                new Placilo{DatumPlacila=DateTime.Now, Znesek=50.00m, ClanstvoId=2},
-                new Placilo{DatumPlacila=DateTime.Now, Znesek=70.00m, ClanstvoId=3}
-            };
+                DatumPlacila = DateTime.Now,
+                Znesek = clanstvo.Cena,
+                ClanstvoId = clanstvo.Id
+            }).ToArray();
             context.Placila.AddRange(placila);
             context.SaveChanges();
 
-            var prisotnosti = new Prisotnost[]
+            // Add attendance
+            var prisotnosti = clani.Select((clan, index) => new Prisotnost
             {
-                new Prisotnost{DatumPrisotnosti=DateTime.Now, ClanId=1, VadbaId=1},
-                new Prisotnost{DatumPrisotnosti=DateTime.Now, ClanId=2, VadbaId=2},
-                new Prisotnost{DatumPrisotnosti=DateTime.Now, ClanId=3, VadbaId=1}
-            };
+                DatumPrisotnosti = DateTime.Now,
+                ClanId = clan.Id,
+                VadbaId = vadbe[index % vadbe.Length].Id
+            }).ToArray();
             context.Prisotnosti.AddRange(prisotnosti);
             context.SaveChanges();
 
-            // Preveri in dodaj vloge, če še ne obstajajo
-            var roles = new IdentityRole[] {
-                new IdentityRole{Id="1", Name="Administrator"},
-                new IdentityRole{Id="2", Name="Manager"},
-                new IdentityRole{Id="3", Name="User"}
-            };
-            foreach (IdentityRole r in roles)
+            // Add roles
+            var roles = new IdentityRole[]
             {
-                context.Roles.Add(r);
-            }
+                new IdentityRole{Name="Administrator"},
+                new IdentityRole{Name="Manager"},
+                new IdentityRole{Name="User"}
+            };
+            context.Roles.AddRange(roles);
+            context.SaveChanges();
 
-            var user = new ApplicationUser
+            // Add users
+            var users = clani.Select(clan => new ApplicationUser
             {
-                FirstName = "Bob",
-                LastName = "Dilon",
-                City = "Ljubljana",
-                Email = "bob@example.com",
-                NormalizedEmail = "XXXX@EXAMPLE.COM",
-                UserName = "bob@example.com",
-                NormalizedUserName = "bob@example.com",
-                PhoneNumber = "+111111111111",
-                EmailConfirmed = true,
-                PhoneNumberConfirmed = true,
-                SecurityStamp = Guid.NewGuid().ToString("D")
-            };
-            if (!context.Users.Any(u => u.UserName == user.UserName))
+                FirstName = clan.Ime,
+                LastName = clan.Priimek,
+                Email = clan.Email,
+                UserName = clan.Email,
+                EmailConfirmed = true
+            }).ToList();
+
+            users.Insert(0, new ApplicationUser{FirstName="Admin", LastName="User", Email="admin@example.com", UserName="admin@example.com", NormalizedEmail = "ADMIN@EXAMPLE.COM", NormalizedUserName = "ADMIN@EXAMPLE.COM", EmailConfirmed=true});
+            users.Insert(1, new ApplicationUser{FirstName="Manager1", LastName="User", Email="manager1@example.com", UserName="manager1@example.com", NormalizedEmail = "MANAGAR1@EXAMPLE.COM", NormalizedUserName = "MANAGAR1@EXAMPLE.COM", EmailConfirmed=true});
+            users.Insert(2, new ApplicationUser{FirstName="Manager2", LastName="User", Email="manager2@example.com", UserName="manager2@example.com", NormalizedEmail = "MANAGAR2@EXAMPLE.COM", NormalizedUserName = "MANAGAR2@EXAMPLE.COM", EmailConfirmed=true});
+
+            var passwordHasher = new PasswordHasher<ApplicationUser>();
+            foreach (var user in users)
             {
-                var password = new PasswordHasher<ApplicationUser>();
-                var hashed = password.HashPassword(user,"Testni123!");
-                user.PasswordHash = hashed;
+                user.PasswordHash = passwordHasher.HashPassword(user, "Password1!");
                 context.Users.Add(user);
-                
             }
             context.SaveChanges();
 
-            var UserRoles = new IdentityUserRole<string>[]
+            // Assign roles
+            var userRoles = new List<IdentityUserRole<string>>
             {
-                new IdentityUserRole<string>{RoleId = roles[0].Id, UserId=user.Id},
-                new IdentityUserRole<string>{RoleId = roles[1].Id, UserId=user.Id},
+                new IdentityUserRole<string> { RoleId = roles[0].Id, UserId = users[0].Id }, // Admin
+                new IdentityUserRole<string> { RoleId = roles[1].Id, UserId = users[1].Id }, // Manager 1
+                new IdentityUserRole<string> { RoleId = roles[1].Id, UserId = users[2].Id }  // Manager 2
             };
-            foreach (IdentityUserRole<string> r in UserRoles)
+
+            userRoles.AddRange(users.Skip(3).Select(user => new IdentityUserRole<string>
             {
-                context.UserRoles.Add(r);
-            }
+                RoleId = roles[2].Id,
+                UserId = user.Id
+            }));
+
+            context.UserRoles.AddRange(userRoles);
             context.SaveChanges();
+
         }
     }
 }

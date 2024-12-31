@@ -112,11 +112,13 @@ namespace FitnesClanstvo.Migrations
 
                     b.Property<string>("Ime")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Priimek")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -141,7 +143,8 @@ namespace FitnesClanstvo.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Tip")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("Zacetek")
                         .HasColumnType("datetime2");
@@ -253,7 +256,8 @@ namespace FitnesClanstvo.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Ime")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("Kapaciteta")
                         .HasColumnType("int");

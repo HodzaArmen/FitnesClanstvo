@@ -71,7 +71,7 @@ namespace FitnesClanstvo.Controllers
                     vadbe = vadbe.OrderBy(s => s.Ime);
                     break;
             }
-            int pageSize = 3;
+            int pageSize = 5;
             return View(await PaginatedList<Vadba>.CreateAsync(vadbe.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
         /*public async Task<IActionResult> Index()

@@ -72,7 +72,7 @@ namespace FitnesClanstvo.Controllers
                     placila = placila.OrderBy(s => s.Znesek);
                     break;
             }
-            int pageSize = 3;
+            int pageSize = 5;
             return View(await PaginatedList<Placilo>.CreateAsync(placila.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
         /*public async Task<IActionResult> Index()

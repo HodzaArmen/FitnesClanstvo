@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FitnesClanstvo.Migrations
 {
     /// <inheritdoc />
-    public partial class Start : Migration
+    public partial class sprememba : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -59,8 +59,8 @@ namespace FitnesClanstvo.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Ime = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Priimek = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Ime = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Priimek = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     DatumRojstva = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -75,7 +75,7 @@ namespace FitnesClanstvo.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Ime = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Ime = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     DatumInUra = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Kapaciteta = table.Column<int>(type: "int", nullable: false)
                 },
@@ -196,7 +196,7 @@ namespace FitnesClanstvo.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Tip = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Tip = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     Cena = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Zacetek = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Konec = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -338,7 +338,8 @@ namespace FitnesClanstvo.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Clanstvo_ClanId",
                 table: "Clanstvo",
-                column: "ClanId");
+                column: "ClanId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Placilo_ClanstvoId",

@@ -40,8 +40,11 @@ namespace FitnesClanstvo.Controllers
 
             ViewData["CurrentFilter"] = searchString;
 
-            var prisotnosti = from s in _context.Prisotnosti
-                        select s;
+            var prisotnosti = _context.Prisotnosti
+                .Include(p => p.Clan)
+                .Include(p => p.Vadba)
+                .AsQueryable();
+            
             if (!String.IsNullOrEmpty(searchString))
             {
                 prisotnosti = prisotnosti.Where(p =>
@@ -58,14 +61,9 @@ namespace FitnesClanstvo.Controllers
                     prisotnosti = prisotnosti.OrderByDescending(s => s.DatumPrisotnosti);
                     break;
             }
-            int pageSize = 3;
+            int pageSize = 5;
             return View(await PaginatedList<Prisotnost>.CreateAsync(prisotnosti.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
-        /*public async Task<IActionResult> Index()
-        {
-            var fitnesContext = _context.Prisotnosti.Include(p => p.Clan).Include(p => p.Vadba);
-            return View(await fitnesContext.ToListAsync());
-        }*/
 
         // GET: Prisotnosti/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -90,8 +88,16 @@ namespace FitnesClanstvo.Controllers
         // GET: Prisotnosti/Create
         public IActionResult Create()
         {
-            ViewData["ClanId"] = new SelectList(_context.Clani, "Id", "Id");
-            ViewData["VadbaId"] = new SelectList(_context.Vadbe, "Id", "Id");
+            ViewBag.ClanId = new SelectList(_context.Clani.Select(c => new 
+            {
+                Id = c.Id,
+                FullName = c.Ime + " " + c.Priimek
+            }), "Id", "FullName");
+            ViewBag.VadbaId = new SelectList(_context.Vadbe.Select(v => new
+            {
+                Id = v.Id,
+                Ime = v.Ime
+            }), "Id", "Ime");
             return View();
         }
 
@@ -108,8 +114,17 @@ namespace FitnesClanstvo.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ClanId"] = new SelectList(_context.Clani, "Id", "Id", prisotnost.ClanId);
-            ViewData["VadbaId"] = new SelectList(_context.Vadbe, "Id", "Id", prisotnost.VadbaId);
+            //ViewData["ClanId"] = new SelectList(_context.Clani, "Id", "Id", prisotnost.ClanId);
+            ViewBag.ClanId = new SelectList(_context.Clani.Select(c => new 
+            {
+                Id = c.Id,
+                FullName = c.Ime + " " + c.Priimek
+            }), "Id", "FullName");
+            ViewBag.VadbaId = new SelectList(_context.Vadbe.Select(v => new
+            {
+                Id = v.Id,
+                Ime = v.Ime
+            }), "Id", "Ime");
             return View(prisotnost);
         }
 
@@ -126,8 +141,18 @@ namespace FitnesClanstvo.Controllers
             {
                 return NotFound();
             }
-            ViewData["ClanId"] = new SelectList(_context.Clani, "Id", "Id", prisotnost.ClanId);
-            ViewData["VadbaId"] = new SelectList(_context.Vadbe, "Id", "Id", prisotnost.VadbaId);
+            ViewBag.ClanId = new SelectList(_context.Clani.Select(c => new 
+            {
+                Id = c.Id,
+                FullName = c.Ime + " " + c.Priimek
+            }), "Id", "FullName", prisotnost.ClanId);
+
+            // Prikaži ime vadbe za vadbe
+            ViewBag.VadbaId = new SelectList(_context.Vadbe.Select(v => new
+            {
+                Id = v.Id,
+                Ime = v.Ime
+            }), "Id", "Ime", prisotnost.VadbaId);
             return View(prisotnost);
         }
 
@@ -163,8 +188,17 @@ namespace FitnesClanstvo.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ClanId"] = new SelectList(_context.Clani, "Id", "Id", prisotnost.ClanId);
-            ViewData["VadbaId"] = new SelectList(_context.Vadbe, "Id", "Id", prisotnost.VadbaId);
+            ViewBag.ClanId = new SelectList(_context.Clani.Select(c => new 
+            {
+                Id = c.Id,
+                FullName = c.Ime + " " + c.Priimek
+            }), "Id", "FullName", prisotnost.ClanId);
+
+            ViewBag.VadbaId = new SelectList(_context.Vadbe.Select(v => new
+            {
+                Id = v.Id,
+                Ime = v.Ime
+            }), "Id", "Ime", prisotnost.VadbaId);
             return View(prisotnost);
         }
 
