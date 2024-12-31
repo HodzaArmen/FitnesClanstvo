@@ -20,15 +20,33 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index(string searchString)
     {
-
         var vadbe = await _context.Vadbe.ToListAsync();
         var clani = await _context.Clani.ToListAsync();
+
+        // Get monthly member statistics based on Clanstvo's start date (Zacetek)
+        var membersPerMonth = await _context.Clanstva
+            .GroupBy(c => new { c.Zacetek.Year, c.Zacetek.Month })
+            .Select(g => new
+            {
+                Year = g.Key.Year,
+                Month = g.Key.Month,
+                MemberCount = g.Count()
+            })
+            .OrderByDescending(x => x.Year)
+            .ThenByDescending(x => x.Month)
+            .ToListAsync();
 
         ViewBag.Clani = clani; // Posreduj člane v pogled
 
         return View(new HomeIndexViewModel
         {
-            Vadbe = vadbe
+            Vadbe = vadbe,
+            MonthlyStatistics = membersPerMonth.Select(m => new MonthlyStatistic
+            {
+                Year = m.Year,
+                Month = m.Month,
+                MemberCount = m.MemberCount
+            }).ToList()
         });
     }
 
