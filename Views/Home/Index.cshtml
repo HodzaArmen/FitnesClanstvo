@@ -4,13 +4,15 @@
 @{
     ViewData["Title"] = "Home Page";
 }
-
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
 <div class="text-center">
     <h1 class="display-4">Fitnes Članstvo</h1>
 </div>
 
+@*
 <h2>Seznam razpoložljivih vadb</h2>
-
 <form asp-action="Rezerviraj" method="post">
     <div class="form-group">
         <label for="vadbaId">Izberite vadbo:</label>
@@ -35,7 +37,7 @@
     <br>
     <button type="submit" class="btn btn-primary">Rezerviraj</button>
 </form>
-<br><br>
+*@
 <h2>Statistika mesečnega števila članov</h2>
 <table class="table">
     <thead>
@@ -56,3 +58,49 @@
         }
     </tbody>
 </table>
+<h2>Grafični prikaz mesečnega števila članov</h2>
+<canvas id="memberChart" style="max-width: 600px; max-height: 300px;"></canvas>
+<div id="calendar" style="margin-top: 20px;"></div>
+
+<script>
+    var ctx = document.getElementById('memberChart').getContext('2d');
+
+    // Pridobite podatke za graf iz Modela
+    var labels = @Html.Raw(Json.Serialize(Model.MonthlyStatistics.Select(s => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(s.Month) + " " + s.Year)));
+    var data = @Html.Raw(Json.Serialize(Model.MonthlyStatistics.Select(s => s.MemberCount)));
+
+    var memberChart = new Chart(ctx, {
+        type: 'bar', // Tip grafa (lahko tudi 'line', 'pie', itd.)
+        data: {
+            labels: labels, // Meseci
+            datasets: [{
+                label: 'Število članov',
+                data: data, // Število članov
+                backgroundColor: 'rgba(99, 232, 59, 0.5)',
+                borderColor: 'rgba(99, 232, 59, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+
+<h2>Povzetek prihodkov</h2>
+<p>Skupni prihodki v preteklem mesecu: @ViewBag.TotalIncome €</p>
+
+<h2>Število novih članov</h2>
+<p>Novih članov v preteklem mesecu: @ViewBag.NewMembersCount</p>
+
+<h2>Najbolj priljubljene vadbe</h2>
+<ul>
+    @foreach (var vadba in ViewBag.PopularVadbe)
+    {
+        <li>@vadba.Ime - @vadba.Rezervacije.Count</li>
+    }
+</ul>

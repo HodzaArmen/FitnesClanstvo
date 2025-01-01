@@ -22,6 +22,17 @@ public class HomeController : Controller
     {
         var vadbe = await _context.Vadbe.ToListAsync();
         var clani = await _context.Clani.ToListAsync();
+        // Get new members in the last month
+        var newMembersCount = await _context.Clanstva
+            .Where(c => c.Zacetek.Month == DateTime.Now.AddMonths(0).Month && c.Zacetek.Year == DateTime.Now.Year)
+            .CountAsync();
+        ViewBag.NewMembersCount = newMembersCount;
+        // Get members whose membership is about to expire
+        var upcomingNotifications = await _context.Clanstva
+            .Where(c => c.Zacetek.AddYears(1) <= DateTime.Now.AddMonths(1))  // Example: Expiring in the next month
+            .ToListAsync();
+
+        ViewBag.UpcomingNotifications = upcomingNotifications; // Pass upcoming notifications to the view
 
         // Get monthly member statistics based on Clanstvo's start date (Zacetek)
         var membersPerMonth = await _context.Clanstva
@@ -36,7 +47,31 @@ public class HomeController : Controller
             .ThenByDescending(x => x.Month)
             .ToListAsync();
 
-        ViewBag.Clani = clani; // Posreduj člane v pogled
+        var popularVadbe = await _context.Vadbe
+            .Include(v => v.Rezervacije)  // Ensure reservations are loaded
+            .OrderByDescending(v => v.Rezervacije.Count)
+            .Take(5)  // Example: Top 5 most popular exercises
+            .ToListAsync();
+
+        // Get monthly income (sum of payments for each month)
+        var incomePerMonth = await _context.Placila
+            .GroupBy(p => new { p.Clanstvo.Zacetek.Year, p.Clanstvo.Zacetek.Month })
+            .Select(g => new
+            {
+                Year = g.Key.Year,
+                Month = g.Key.Month,
+                Income = g.Sum(p => p.Znesek) // Sum of payments for each month
+            })
+            .OrderByDescending(x => x.Year)
+            .ThenByDescending(x => x.Month)
+            .ToListAsync();
+
+        // Calculate total income for the last month
+        var totalIncome = incomePerMonth.LastOrDefault()?.Income ?? 0;
+
+        ViewBag.Clani = clani;  // Pass the list of members to the view
+        ViewBag.TotalIncome = totalIncome;  // Pass total income to the view
+        ViewBag.PopularVadbe = popularVadbe;  // Pass popular exercises to the view
 
         return View(new HomeIndexViewModel
         {
@@ -51,39 +86,40 @@ public class HomeController : Controller
     }
 
 
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> Rezerviraj(int vadbaId, int izbraniClanId)
-{
-    // Poiščemo člana v bazi
-    var clan = await _context.Clani.FindAsync(izbraniClanId);
-    if (clan == null)
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Rezerviraj(int vadbaId, int izbraniClanId)
     {
-        return Content("Član ni bil najden.");
+        // Poiščemo člana v bazi
+        var clan = await _context.Clani.FindAsync(izbraniClanId);
+        if (clan == null)
+        {
+            return Content("Član ni bil najden.");
+        }
+
+        // Poiščemo vadbo v bazi
+        var vadba = await _context.Vadbe.FindAsync(vadbaId);
+        if (vadba == null)
+        {
+            return Content("Vadba ni bila najdena.");
+        }
+
+        // Ustvarimo novo rezervacijo
+        var rezervacija = new Rezervacija
+        {
+            ClanId = izbraniClanId,
+            VadbaId = vadbaId,
+            DatumRezervacije = DateTime.Now // Nastavimo datum rezervacije na trenutni čas
+        };
+
+        // Dodamo rezervacijo v tabelo
+        _context.Rezervacije.Add(rezervacija);
+        await _context.SaveChangesAsync();
+
+        // Preusmerimo uporabnika nazaj na začetno stran
+        return RedirectToAction("Index");
     }
-
-    // Poiščemo vadbo v bazi
-    var vadba = await _context.Vadbe.FindAsync(vadbaId);
-    if (vadba == null)
-    {
-        return Content("Vadba ni bila najdena.");
-    }
-
-    // Ustvarimo novo rezervacijo
-    var rezervacija = new Rezervacija
-    {
-        ClanId = izbraniClanId,
-        VadbaId = vadbaId,
-        DatumRezervacije = DateTime.Now // Nastavimo datum rezervacije na trenutni čas
-    };
-
-    // Dodamo rezervacijo v tabelo
-    _context.Rezervacije.Add(rezervacija);
-    await _context.SaveChangesAsync();
-
-    // Preusmerimo uporabnika nazaj na začetno stran
-    return RedirectToAction("Index");
-}
 
  
 

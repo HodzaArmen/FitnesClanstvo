@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FitnesClanstvo.Migrations
 {
     [DbContext(typeof(FitnesContext))]
-    [Migration("20241231131350_sprememba")]
-    partial class sprememba
+    [Migration("20241231190331_AddRezervacijeToVadba")]
+    partial class AddRezervacijeToVadba
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -421,7 +421,7 @@ namespace FitnesClanstvo.Migrations
             modelBuilder.Entity("FitnesClanstvo.Models.Placilo", b =>
                 {
                     b.HasOne("FitnesClanstvo.Models.Clanstvo", "Clanstvo")
-                        .WithMany()
+                        .WithMany("Placila")
                         .HasForeignKey("ClanstvoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -463,7 +463,7 @@ namespace FitnesClanstvo.Migrations
                         .IsRequired();
 
                     b.HasOne("FitnesClanstvo.Models.Vadba", "Vadba")
-                        .WithMany()
+                        .WithMany("Rezervacije")
                         .HasForeignKey("VadbaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -527,6 +527,16 @@ namespace FitnesClanstvo.Migrations
             modelBuilder.Entity("FitnesClanstvo.Models.Clan", b =>
                 {
                     b.Navigation("Clanstvo");
+                });
+
+            modelBuilder.Entity("FitnesClanstvo.Models.Clanstvo", b =>
+                {
+                    b.Navigation("Placila");
+                });
+
+            modelBuilder.Entity("FitnesClanstvo.Models.Vadba", b =>
+                {
+                    b.Navigation("Rezervacije");
                 });
 #pragma warning restore 612, 618
         }
