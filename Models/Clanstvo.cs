@@ -16,5 +16,6 @@ namespace FitnesClanstvo.Models
         public DateTime Konec { get; set; }
         public int ClanId { get; set; }
         public Clan? Clan { get; set; }
+        public ICollection<Placilo> Placila { get; set; }
     }
 }

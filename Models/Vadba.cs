@@ -11,5 +11,6 @@ namespace FitnesClanstvo.Models
         [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy}", ApplyFormatInEditMode = true)]
         public DateTime DatumInUra { get; set; }
         public int Kapaciteta { get; set; }
+        public ICollection<Rezervacija> Rezervacije { get; set; }
     }
 }
