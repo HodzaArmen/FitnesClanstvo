@@ -4,9 +4,10 @@ using FitnesClanstvo.Models;
 using FitnesClanstvo.Data;
 using Microsoft.EntityFrameworkCore;
 using FitnesClanstvo.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FitnesClanstvo.Controllers;
-
+[Authorize]
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
@@ -73,6 +74,35 @@ public class HomeController : Controller
         ViewBag.TotalIncome = totalIncome;  // Pass total income to the view
         ViewBag.PopularVadbe = popularVadbe;  // Pass popular exercises to the view
 
+        // Fetch user reservations
+        var userReservations = User.Identity.IsAuthenticated 
+            ? await _context.Rezervacije
+                .Where(r => r.Clan.Ime == User.Identity.Name && r.DatumRezervacije >= DateTime.Now)
+                .ToListAsync() 
+            : new List<Rezervacija>(); // Ensure it's never null
+
+        ViewBag.UserReservations = userReservations;
+
+        // Fetch the user membership details
+        var user = await _context.Clani
+            .FirstOrDefaultAsync(c => c.Ime == User.Identity.Name); // Assuming you store the username
+
+        if (user != null)
+        {
+            var clanstvo = await _context.Clanstva.FirstOrDefaultAsync(c => c.ClanId == user.Id);
+
+            if (clanstvo != null)
+            {
+                ViewBag.StartDate = clanstvo.Zacetek.ToString("dd.MM.yyyy"); // Membership start date
+                // Determine membership status based on start and end dates
+                ViewBag.MembershipStatus = (clanstvo.Konec >= DateTime.Now) ? "Active" : "Expired"; 
+            }
+            else
+            {
+                ViewBag.MembershipStatus = "No membership found";
+            }
+        }
+
         return View(new HomeIndexViewModel
         {
             Vadbe = vadbe,
@@ -133,6 +163,4 @@ public class HomeController : Controller
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
-
-    
 }

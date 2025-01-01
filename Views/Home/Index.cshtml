@@ -11,96 +11,99 @@
     <h1 class="display-4">Fitnes Članstvo</h1>
 </div>
 
-@*
-<h2>Seznam razpoložljivih vadb</h2>
-<form asp-action="Rezerviraj" method="post">
-    <div class="form-group">
-        <label for="vadbaId">Izberite vadbo:</label>
-        <select name="vadbaId" id="vadbaId" class="form-select">
-            <option value="">Izberite vadbo</option>
-            @foreach (var vadba in Model.Vadbe)
-            {
-                <option value="@vadba.Id">@vadba.Ime (@vadba.DatumInUra.ToString("dd.MM.yyyy HH:mm"))</option>
-            }
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="izbraniClanId">Izberite člana:</label>
-        <select name="izbraniClanId" id="izbraniClanId" class="form-select">
-            <option value="">Izberite člana</option>
-            @foreach (var clan in ViewBag.Clani as List<FitnesClanstvo.Models.Clan>)
-            {
-                <option value="@clan.Id">@clan.Ime @clan.Priimek</option>
-            }
-        </select>
-    </div>
-    <br>
-    <button type="submit" class="btn btn-primary">Rezerviraj</button>
-</form>
-*@
-<h2>Statistika mesečnega števila članov</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Mesec</th>
-            <th>Leto</th>
-            <th>Število članov</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var stat in Model.MonthlyStatistics)
-        {
+@if (User.IsInRole("Administrator"))  // Preverimo, če je uporabnik v vlogi Administrator
+{
+    <h2>Statistika mesečnega števila članov</h2>
+    <table class="table">
+        <thead>
             <tr>
-                <td>@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(stat.Month)</td>
-                <td>@stat.Year</td>
-                <td>@stat.MemberCount</td>
+                <th>Mesec</th>
+                <th>Leto</th>
+                <th>Število članov</th>
             </tr>
-        }
-    </tbody>
-</table>
-<h2>Grafični prikaz mesečnega števila članov</h2>
-<canvas id="memberChart" style="max-width: 600px; max-height: 300px;"></canvas>
-<div id="calendar" style="margin-top: 20px;"></div>
+        </thead>
+        <tbody>
+            @foreach (var stat in Model.MonthlyStatistics)
+            {
+                <tr>
+                    <td>@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(stat.Month)</td>
+                    <td>@stat.Year</td>
+                    <td>@stat.MemberCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 
-<script>
-    var ctx = document.getElementById('memberChart').getContext('2d');
+    <h2>Grafični prikaz mesečnega števila članov</h2>
+    <canvas id="memberChart" style="max-width: 600px; max-height: 300px;"></canvas>
+    <div id="calendar" style="margin-top: 20px;"></div>
 
-    // Pridobite podatke za graf iz Modela
-    var labels = @Html.Raw(Json.Serialize(Model.MonthlyStatistics.Select(s => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(s.Month) + " " + s.Year)));
-    var data = @Html.Raw(Json.Serialize(Model.MonthlyStatistics.Select(s => s.MemberCount)));
+    <script>
+        var ctx = document.getElementById('memberChart').getContext('2d');
 
-    var memberChart = new Chart(ctx, {
-        type: 'bar', // Tip grafa (lahko tudi 'line', 'pie', itd.)
-        data: {
-            labels: labels, // Meseci
-            datasets: [{
-                label: 'Število članov',
-                data: data, // Število članov
-                backgroundColor: 'rgba(99, 232, 59, 0.5)',
-                borderColor: 'rgba(99, 232, 59, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
+        // Pridobite podatke za graf iz Modela
+        var labels = @Html.Raw(Json.Serialize(Model.MonthlyStatistics.Select(s => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(s.Month) + " " + s.Year)));
+        var data = @Html.Raw(Json.Serialize(Model.MonthlyStatistics.Select(s => s.MemberCount)));
+
+        var memberChart = new Chart(ctx, {
+            type: 'bar', // Tip grafa (lahko tudi 'line', 'pie', itd.)
+            data: {
+                labels: labels, // Meseci
+                datasets: [{
+                    label: 'Število članov',
+                    data: data, // Število članov
+                    backgroundColor: 'rgba(99, 232, 59, 0.5)',
+                    borderColor: 'rgba(99, 232, 59, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
+        });
+    </script>
+
+    <h2>Povzetek prihodkov</h2>
+    <p>Skupni prihodki v preteklem mesecu: @ViewBag.TotalIncome €</p>
+
+    <h2>Število novih članov</h2>
+    <p>Novih članov v preteklem mesecu: @ViewBag.NewMembersCount</p>
+
+    <h2>Najbolj priljubljene vadbe</h2>
+    <ul>
+        @foreach (var vadba in ViewBag.PopularVadbe)
+        {
+            <li>@vadba.Ime - @vadba.Rezervacije.Count</li>
         }
-    });
-</script>
+    </ul>
+}
 
-<h2>Povzetek prihodkov</h2>
-<p>Skupni prihodki v preteklem mesecu: @ViewBag.TotalIncome €</p>
+@if (!User.IsInRole("Administrator"))
+{
+    <h2>Seznam prihajajočih vadb</h2>
+    <ul>
+        @foreach (var vadba in Model.Vadbe.Where(v => v.DatumInUra >= DateTime.Now))
+        {
+            <li>@vadba.Ime - @vadba.DatumInUra.ToString("dd.MM.yyyy HH:mm")</li>
+        }
+    </ul>
 
-<h2>Število novih članov</h2>
-<p>Novih članov v preteklem mesecu: @ViewBag.NewMembersCount</p>
-
-<h2>Najbolj priljubljene vadbe</h2>
-<ul>
-    @foreach (var vadba in ViewBag.PopularVadbe)
+    <h2>Vaše prihajajoče rezervacije</h2>
+    @if (ViewBag.UserReservations != null)
     {
-        <li>@vadba.Ime - @vadba.Rezervacije.Count</li>
+        <ul>
+            @foreach (var rezervacija in ViewBag.UserReservations)
+            {
+                <li>@rezervacija.Vadba.Ime - @rezervacija.DatumRezervacije.ToString("dd.MM.yyyy HH:mm")</li>
+            }
+        </ul>
     }
-</ul>
+    else
+    {
+        <p>Trenutno ni prihajajočih rezervacij.</p>
+    }
+}
