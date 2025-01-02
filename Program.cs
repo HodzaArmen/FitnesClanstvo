@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("FitnesContext");
+var connectionString = builder.Configuration.GetConnectionString("AzureContext");
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
