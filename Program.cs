@@ -2,8 +2,11 @@ using FitnesClanstvo.Data;
 using FitnesClanstvo.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationDbContext") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContext' not found.")));
 var connectionString = builder.Configuration.GetConnectionString("AzureContext");
 
 // Add services to the container.
