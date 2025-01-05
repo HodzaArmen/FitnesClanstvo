@@ -18,6 +18,8 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<FitnesContext>();
 
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 // using(var scope = app.Services.CreateScope())
@@ -42,6 +44,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+c.SwaggerEndpoint("/swagger/v1/swagger.json", "FitnesClanstvo");
+});
 
 app.UseRouting();
 
