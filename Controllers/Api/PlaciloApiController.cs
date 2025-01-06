@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FitnesClanstvo.Data;
 using FitnesClanstvo.Models;
+using FitnesClanstvo.Filters;
 
 namespace FitnesClanstvo.Controllers_Api
 {
     [Route("api/v1/placilo")]
     [ApiController]
+    [ApiKeyAuth]
     public class PlaciloApiController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

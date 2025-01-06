@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FitnesClanstvo.Data;
 using FitnesClanstvo.Models;
+using FitnesClanstvo.Filters;
 
 namespace FitnesClanstvo.Controllers_Api
 {
     [Route("api/v1/vadba")]
     [ApiController]
+    [ApiKeyAuth]
     public class VadbaApiController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
