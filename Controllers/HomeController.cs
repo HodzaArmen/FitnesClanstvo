@@ -21,7 +21,9 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index(string searchString)
     {
-        var vadbe = await _context.Vadbe.ToListAsync();
+        var vadbe = await _context.Vadbe
+            .Where(v => v.DatumInUra >= DateTime.Now) // Filtriramo le prihodnje vadbe
+            .ToListAsync();
         var clani = await _context.Clani.ToListAsync();
         // Get new members in the last month
         var newMembersCount = await _context.Clanstva
@@ -74,12 +76,14 @@ public class HomeController : Controller
         ViewBag.TotalIncome = totalIncome;  // Pass total income to the view
         ViewBag.PopularVadbe = popularVadbe;  // Pass popular exercises to the view
 
-        // Fetch user reservations
-        var userReservations = User.Identity.IsAuthenticated 
-            ? await _context.Rezervacije
+        var userReservations = new List<Rezervacija>();
+        if (User.Identity.IsAuthenticated)
+        {
+            userReservations = await _context.Rezervacije
+                .Include(r => r.Vadba)
                 .Where(r => r.Clan.Ime == User.Identity.Name && r.DatumRezervacije >= DateTime.Now)
-                .ToListAsync() 
-            : new List<Rezervacija>(); // Ensure it's never null
+                .ToListAsync();
+        }
 
         ViewBag.UserReservations = userReservations;
 

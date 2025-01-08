@@ -36,16 +36,16 @@ namespace FitnesClanstvo.Data
             // Add activities
             var vadbe = new Vadba[]
             {
-                new Vadba{Ime="Joga", DatumInUra=DateTime.Now.AddHours(1), Kapaciteta=20},
-                new Vadba{Ime="Zumba", DatumInUra=DateTime.Now.AddHours(2), Kapaciteta=15},
-                new Vadba{Ime="Pilates", DatumInUra=DateTime.Now.AddHours(3), Kapaciteta=10},
-                new Vadba{Ime="Kardio", DatumInUra=DateTime.Now.AddHours(4), Kapaciteta=25},
-                new Vadba{Ime="BodyPump", DatumInUra=DateTime.Now.AddHours(5), Kapaciteta=18},
-                new Vadba{Ime="HIIT", DatumInUra=DateTime.Now.AddHours(6), Kapaciteta=12},
-                new Vadba{Ime="Spinning", DatumInUra=DateTime.Now.AddHours(7), Kapaciteta=16},
-                new Vadba{Ime="CrossFit", DatumInUra=DateTime.Now.AddHours(8), Kapaciteta=14},
-                new Vadba{Ime="Aerobika", DatumInUra=DateTime.Now.AddHours(9), Kapaciteta=20},
-                new Vadba{Ime="Bootcamp", DatumInUra=DateTime.Now.AddHours(10), Kapaciteta=15}
+                new Vadba{Ime="Joga", DatumInUra=DateTime.Now.AddHours(1).AddDays(20), Kapaciteta=20},
+                new Vadba{Ime="Zumba", DatumInUra=DateTime.Now.AddHours(2).AddDays(20), Kapaciteta=15},
+                new Vadba{Ime="Pilates", DatumInUra=DateTime.Now.AddHours(3).AddDays(20), Kapaciteta=10},
+                new Vadba{Ime="Kardio", DatumInUra=DateTime.Now.AddHours(4).AddDays(20), Kapaciteta=25},
+                new Vadba{Ime="BodyPump", DatumInUra=DateTime.Now.AddHours(5).AddDays(20), Kapaciteta=18},
+                new Vadba{Ime="HIIT", DatumInUra=DateTime.Now.AddHours(6).AddDays(20), Kapaciteta=12},
+                new Vadba{Ime="Spinning", DatumInUra=DateTime.Now.AddHours(7).AddDays(20), Kapaciteta=16},
+                new Vadba{Ime="CrossFit", DatumInUra=DateTime.Now.AddHours(8).AddDays(20), Kapaciteta=14},
+                new Vadba{Ime="Aerobika", DatumInUra=DateTime.Now.AddHours(9).AddDays(20), Kapaciteta=20},
+                new Vadba{Ime="Bootcamp", DatumInUra=DateTime.Now.AddHours(10).AddDays(20), Kapaciteta=15}
             };
             context.Vadbe.AddRange(vadbe);
             context.SaveChanges();

@@ -2,13 +2,13 @@
 @using System.Globalization
 
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Domov";
 }
 <head>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <div class="text-center">
-    <h1 class="display-4">Fitnes Članstvo</h1>
+    <h1 class="display-4">Dobrodošli v Fitnes Članstvu</h1>
 </div>
 
 @if (User.IsInRole("Administrator"))  // Preverimo, če je uporabnik v vlogi Administrator
@@ -86,14 +86,23 @@
 {
     <h2>Seznam prihajajočih vadb</h2>
     <ul>
-        @foreach (var vadba in Model.Vadbe.Where(v => v.DatumInUra >= DateTime.Now))
+        @foreach (var vadba in Model.Vadbe)
         {
-            <li>@vadba.Ime - @vadba.DatumInUra.ToString("dd.MM.yyyy HH:mm")</li>
+            <li>
+                @vadba.Ime - @vadba.DatumInUra.ToString("dd.MM.yyyy HH:mm")
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <form asp-action="Rezerviraj" method="post">
+                        <input type="hidden" name="vadbaId" value="@vadba.Id" />
+                        <button type="submit" class="btn btn-primary">Rezerviraj</button>
+                    </form>
+                }
+            </li>
         }
     </ul>
 
     <h2>Vaše prihajajoče rezervacije</h2>
-    @if (ViewBag.UserReservations != null)
+    @if (ViewBag.UserReservations.Count > 0)
     {
         <ul>
             @foreach (var rezervacija in ViewBag.UserReservations)
@@ -104,6 +113,6 @@
     }
     else
     {
-        <p>Trenutno ni prihajajočih rezervacij.</p>
+        <p>Trenutno nimate nobenih rezervacij.</p>
     }
 }
