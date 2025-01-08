@@ -113,12 +113,23 @@ namespace FitnesClanstvo.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Preverite podatke, ki jih pošiljate
+                Console.WriteLine($"Ime: {vadba.Ime}, DatumInUra: {vadba.DatumInUra}, Kapaciteta: {vadba.Kapaciteta}");
+
                 _context.Add(vadba);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+            
+            // Če ModelState ni veljaven, izpišite napake
+            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            {
+                Console.WriteLine("Napaka: " + error.ErrorMessage);
+            }
+            
             return View(vadba);
         }
+
 
         // GET: Vadbe/Edit/5
         public async Task<IActionResult> Edit(int? id)

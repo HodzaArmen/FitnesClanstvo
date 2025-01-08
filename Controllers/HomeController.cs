@@ -30,12 +30,6 @@ public class HomeController : Controller
             .Where(c => c.Zacetek.Month == DateTime.Now.AddMonths(0).Month && c.Zacetek.Year == DateTime.Now.Year)
             .CountAsync();
         ViewBag.NewMembersCount = newMembersCount;
-        // Get members whose membership is about to expire
-        var upcomingNotifications = await _context.Clanstva
-            .Where(c => c.Zacetek.AddYears(1) <= DateTime.Now.AddMonths(1))  // Example: Expiring in the next month
-            .ToListAsync();
-
-        ViewBag.UpcomingNotifications = upcomingNotifications; // Pass upcoming notifications to the view
 
         // Get monthly member statistics based on Clanstvo's start date (Zacetek)
         var membersPerMonth = await _context.Clanstva
@@ -81,12 +75,12 @@ public class HomeController : Controller
         {
             userReservations = await _context.Rezervacije
                 .Include(r => r.Vadba)
-                .Where(r => r.Clan.Ime == User.Identity.Name && r.DatumRezervacije >= DateTime.Now)
+                .Where(r => r.Clan.Email == User.Identity.Name && r.DatumRezervacije >= DateTime.Now)
                 .ToListAsync();
         }
-
         ViewBag.UserReservations = userReservations;
-
+        var userReservedVadbeIds = userReservations.Select(r => r.VadbaId).ToList();
+        ViewBag.UserReservedVadbeIds = userReservedVadbeIds;  // Shranimo ID-je vadb, za katere je uporabnik že rezerviral
         // Fetch the user membership details
         var user = await _context.Clani
             .FirstOrDefaultAsync(c => c.Ime == User.Identity.Name); // Assuming you store the username
@@ -106,10 +100,12 @@ public class HomeController : Controller
                 ViewBag.MembershipStatus = "No membership found";
             }
         }
+        //ViewBag.UserReservations = userReservations;
 
         return View(new HomeIndexViewModel
         {
             Vadbe = vadbe,
+            UserReservedVadbeIds = userReservedVadbeIds,
             MonthlyStatistics = membersPerMonth.Select(m => new MonthlyStatistic
             {
                 Year = m.Year,
@@ -119,44 +115,67 @@ public class HomeController : Controller
         });
     }
 
-
-
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Rezerviraj(int vadbaId, int izbraniClanId)
+    public IActionResult Rezerviraj(int vadbaId)
     {
-        // Poiščemo člana v bazi
-        var clan = await _context.Clani.FindAsync(izbraniClanId);
-        if (clan == null)
+        if (!User.Identity.IsAuthenticated)
         {
-            return Content("Član ni bil najden.");
+            _logger.LogWarning("User is not authenticated.");
+            return RedirectToAction("Login", "Account");
         }
 
-        // Poiščemo vadbo v bazi
-        var vadba = await _context.Vadbe.FindAsync(vadbaId);
+        var uporabnik = _context.Clani.SingleOrDefault(c => c.Email == User.Identity.Name);
+
+        if (uporabnik == null)
+        {
+            _logger.LogError("Član ni bil najden.");
+            TempData["ErrorMessage"] = "Član ni bil najden.";
+            return RedirectToAction("Index", "Home");
+        }
+
+        var vadba = _context.Vadbe.Include(v => v.Rezervacije)
+                                .SingleOrDefault(v => v.Id == vadbaId);
+
         if (vadba == null)
         {
-            return Content("Vadba ni bila najdena.");
+            _logger.LogError("Vadba ni bila najdena.");
+            TempData["ErrorMessage"] = "Vadba ni bila najdena.";
+            return RedirectToAction("Index", "Home");
         }
 
-        // Ustvarimo novo rezervacijo
+        if (vadba.Kapaciteta <= vadba.Rezervacije.Count)
+        {
+            _logger.LogWarning("Vadba je že polna.");
+            TempData["ErrorMessage"] = "Vadba je že polna.";
+            return RedirectToAction("Index", "Home");
+        }
+
+        // Preverite, ali uporabnik že ima prihodnjo rezervacijo za to vadbo
+        var obstojecaRezervacija = _context.Rezervacije
+            .FirstOrDefault(r => r.ClanId == uporabnik.Id && r.VadbaId == vadba.Id && r.DatumRezervacije >= DateTime.Now);
+
+        if (obstojecaRezervacija != null)
+        {
+            _logger.LogWarning("Že ste rezervirali to vadbo.");
+            TempData["ErrorMessage"] = "Že ste rezervirali to vadbo.";
+            return RedirectToAction("Index", "Home");
+        }
+
         var rezervacija = new Rezervacija
         {
-            ClanId = izbraniClanId,
-            VadbaId = vadbaId,
-            DatumRezervacije = DateTime.Now // Nastavimo datum rezervacije na trenutni čas
+            VadbaId = vadba.Id,
+            ClanId = uporabnik.Id,
+            DatumRezervacije = vadba.DatumInUra // Set to the date and time of the exercise
         };
 
-        // Dodamo rezervacijo v tabelo
         _context.Rezervacije.Add(rezervacija);
-        await _context.SaveChangesAsync();
+        _context.SaveChanges();
 
-        // Preusmerimo uporabnika nazaj na začetno stran
-        return RedirectToAction("Index");
+        _logger.LogInformation("Rezervacija je bila uspešno narejena.");
+        TempData["SuccessMessage"] = "Rezervacija je bila uspešno narejena!";
+        return RedirectToAction("Index", "Home");
     }
-
- 
-
     public IActionResult Privacy()
     {
         return View();

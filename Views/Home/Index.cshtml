@@ -88,16 +88,24 @@
     <ul>
         @foreach (var vadba in Model.Vadbe)
         {
-            <li>
-                @vadba.Ime - @vadba.DatumInUra.ToString("dd.MM.yyyy HH:mm")
-                @if (User.Identity.IsAuthenticated)
+            <div>
+                <h3>@vadba.Ime</h3>
+                <p>@vadba.DatumInUra</p>
+
+                @if (!ViewBag.UserReservedVadbeIds.Contains(vadba.Id))
                 {
-                    <form asp-action="Rezerviraj" method="post">
+                    <!-- Prikaz gumba za rezervacijo samo, če uporabnik ni že rezerviral -->
+                    <form method="post" action="@Url.Action("Rezerviraj", "Home")">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" name="vadbaId" value="@vadba.Id" />
                         <button type="submit" class="btn btn-primary">Rezerviraj</button>
                     </form>
                 }
-            </li>
+                else
+                {
+                    <p>Že ste rezervirali to vadbo.</p>
+                }
+            </div>
         }
     </ul>
 

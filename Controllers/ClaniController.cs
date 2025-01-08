@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using FitnesClanstvo.Data;
 using FitnesClanstvo.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;  // For UserManager and SignInManager
 
 namespace FitnesClanstvo.Controllers
 {
@@ -15,10 +16,13 @@ namespace FitnesClanstvo.Controllers
     public class ClaniController : Controller
     {
         private readonly FitnesContext _context;
-
-        public ClaniController(FitnesContext context)
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        public ClaniController(FitnesContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             _context = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         // GET: Clani
@@ -105,28 +109,48 @@ namespace FitnesClanstvo.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        //[ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Ime,Priimek,DatumRojstva,Email")] Clan clan)
         {
-            try
+            if (ModelState.IsValid)
             {
-                if (ModelState.IsValid)
+                // Shranite člana v bazo
+                _context.Add(clan);
+                await _context.SaveChangesAsync();
+
+                // Ustvarite uporabnika za člana
+                var user = new ApplicationUser
                 {
-                    _context.Add(clan);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
+                    FirstName = clan.Ime,
+                    LastName = clan.Priimek,
+                    Email = clan.Email,
+                    UserName = clan.Email,
+                    EmailConfirmed = true
+                };
+
+                // Preverite, ali uporabnik že obstaja
+                var userExists = await _userManager.FindByEmailAsync(user.Email);
+                if (userExists == null)
+                {
+                    var result = await _userManager.CreateAsync(user, "Password1!");
+                    if (result.Succeeded)
+                    {
+                        // Dodelite vlogo "User" (lahko dodelite tudi drugo vlogo glede na tip članstva)
+                        await _userManager.AddToRoleAsync(user, "User");
+                    }
+                    else
+                    {
+                        // Obdelava napak pri ustvarjanju uporabnika
+                        ModelState.AddModelError("", "Napaka pri ustvarjanju uporabnika.");
+                        return View(clan);
+                    }
                 }
+
+                return RedirectToAction(nameof(Index));
             }
-            catch (DbUpdateException /* ex */)
-            {
-                //Log the error (uncomment ex variable name and write a log.
-                ModelState.AddModelError("", "Unable to save changes. " +
-                    "Try again, and if the problem persists " +
-                    "see your system administrator.");
-            }
-            
             return View(clan);
         }
+
 
         // GET: Clani/Edit/5
         public async Task<IActionResult> Edit(int? id)

@@ -6,7 +6,8 @@ namespace FitnesClanstvo.ViewModels
     public class HomeIndexViewModel
     {
         public List<Vadba> Vadbe { get; set; } = new List<Vadba>();
-        public List<MonthlyStatistic> MonthlyStatistics { get; set; }
+        public List<int>? UserReservedVadbeIds { get; set; } 
+        public List<MonthlyStatistic>? MonthlyStatistics { get; set; }
         public int IzbraniClanId { get; set; } // Za prijavo člana
     }
     public class MonthlyStatistic
